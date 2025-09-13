@@ -1,0 +1,8 @@
+/* Full page center */
+.login-container {
+  height: 100vh;
+  background-color: #f8f9fa; /* Light gray */
+}
+.card {
+  border-radius: 8px;
+}
