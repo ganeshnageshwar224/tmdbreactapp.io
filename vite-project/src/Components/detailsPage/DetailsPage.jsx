@@ -1,5 +1,5 @@
-import MovieDetails from "../movieDetails/MovieDetails"
-import Casts from "../casts/Casts"
+import MovieDetails from "../../Components/movieDetails/MovieDetails"
+import Casts from "../../Components/casts/Casts"
 
 const DetailsPage = () =>{
     return(

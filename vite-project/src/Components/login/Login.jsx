@@ -6,27 +6,27 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [token, setToken] = useState(""); // access token not used in TMDb login flow, but keeping as per your form
+  const [apiKey, setApiKey] = useState(""); // user-provided API key
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  const API_KEY = "5cd4c9880a1bc651fb5e2193600d6d70"; // Example: 5cd4c9880a1bc651fb5e2193600d6d70
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
     try {
+      if (!apiKey) throw new Error("API Key is required");
+
       // 1. Create request token
       const tokenRes = await fetch(
-        `https://api.themoviedb.org/3/authentication/token/new?api_key=${token}`
+        `https://api.themoviedb.org/3/authentication/token/new?api_key=${apiKey}`
       );
       const tokenData = await tokenRes.json();
       if (!tokenData.success) throw new Error("Failed to create request token");
 
-      // 2. Validate with login
+      // 2. Validate login with username, password, and request token
       const validateRes = await fetch(
-        `https://api.themoviedb.org/3/authentication/token/validate_with_login?api_key=${token}`,
+        `https://api.themoviedb.org/3/authentication/token/validate_with_login?api_key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -38,12 +38,13 @@ const Login = () => {
         }
       );
       const validateData = await validateRes.json();
-      if (!validateData.success)
+      if (!validateData.success) {
         throw new Error(validateData.status_message || "Invalid credentials");
+      }
 
-      // 3. Create session
+      // 3. Create session for this user
       const sessionRes = await fetch(
-        `https://api.themoviedb.org/3/authentication/session/new?api_key=${token}`,
+        `https://api.themoviedb.org/3/authentication/session/new?api_key=${apiKey}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -53,8 +54,9 @@ const Login = () => {
       const sessionData = await sessionRes.json();
       if (!sessionData.success) throw new Error("Failed to create session");
 
-      // ✅ Save session_id in localStorage
+      // ✅ Save session_id & apiKey in localStorage
       localStorage.setItem("tmdb_session_id", sessionData.session_id);
+      localStorage.setItem("tmdb_api_key", apiKey);
 
       // Redirect to home
       navigate("/home");
@@ -69,12 +71,12 @@ const Login = () => {
         <h4 className="text-center mb-4">Login</h4>
         {error && <div className="alert alert-danger">{error}</div>}
         <form onSubmit={handleLogin}>
-          {/* Admin Field */}
+          {/* Username Field */}
           <div className="mb-3">
             <input
               type="text"
               className="form-control"
-              placeholder="Admin *"
+              placeholder="Username *"
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -93,14 +95,15 @@ const Login = () => {
             />
           </div>
 
-          {/* Token Field (optional, not needed by TMDb API) */}
+          {/* API Key Field */}
           <div className="mb-3">
             <input
               type="text"
               className="form-control"
-              placeholder="Token *"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
+              placeholder="API Key *"
+              required
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
             />
           </div>
 
